@@ -8,22 +8,25 @@ const productSchema = new mongoose.Schema({
     },
     price:{
         type:Number,
-        required:true
+        required:true,
+        min:0
     },
     description:{
         type:String,
         required:true
     },
-    category:{
-        type:String
+    categories:{
+        type:[mongoose.Schema.Types.ObjectId],
+        ref:'Category'
     },
     stock:{
         type:Number,
         required:true,
-        default:0
+        default:0,
+        min:0
     },
     image:{
-        type:String
+        type:[String]
     }
 },{timestamps:true})
 

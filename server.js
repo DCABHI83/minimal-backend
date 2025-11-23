@@ -3,6 +3,7 @@ import dotenv from 'dotenv'
 import connectDb from './config/db.js'
 import router from './routes/userRoutes.js'
 import cookieParser from 'cookie-parser';
+import productRouter from './routes/productRoute.js';
 
 
 
@@ -18,7 +19,7 @@ app.use((req,res,next)=>{
     next()
 })
 
-app.use('/api',router)
+app.use('/api',router,productRouter)
 
 const startServer = async()=>{
     

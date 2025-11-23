@@ -39,7 +39,7 @@ router.post('/login',async(req,res)=>{
    if(!match){
          return res.status(400).json({message:"Invalid credentials"})
    }
-  const token = jwt.sign({id:user._id,email:user.email},process.env.SECRET_KEY,{expiresIn:process.env.EXPIRES_IN})
+  const accessToken = jwt.sign({id:user._id,email:user.email},process.env.SECRET_KEY,{expiresIn:process.env.EXPIRES_IN})
   const refreshToken = jwt.sign({id:user._id,email:user.email},process.env.REFRESH_KEY,{expiresIn:process.env.REFRESH_EXPIRY})
   res.cookie("refreshToken",refreshToken,{
     httpOnly:true,
@@ -47,7 +47,7 @@ router.post('/login',async(req,res)=>{
    secure: process.env.NODE_ENV === "production",
     maxAge:7*24*60*60*1000
   })
-   return res.status(200).json({message:"USer logged in successfully",token})
+   return res.status(200).json({message:"USer logged in successfully",accessToken})
  } catch (error) {
     return res.status(404).json({message:"something went wrong"})
  }
@@ -86,13 +86,23 @@ router.get('/refresh',async(req,res)=>{
     return res.status(401).json({message:"User not Found"})
    }
 
-   const newToken = jwt.sign({_id:user._id,email:user.email},process.env.SECRET_KEY,{expiresIn:process.env.EXPIRES_IN})
-   return res.status(200).json({token:newToken})
+   const accessToken = jwt.sign({_id:user._id,email:user.email},process.env.SECRET_KEY,{expiresIn:process.env.EXPIRES_IN})
+   return res.status(200).json({token:accessToken})
  
  } catch (error) {
 return res.status(403).json({ message: "Invalid or expired refresh token" })
 
  }
+})
+
+
+
+//logout
+
+router.post('/logout',(req,res)=>{
+  res.clearCookie('refreshToken')
+  res.clearCookie('accessToken')
+  return res.status(200).json({mesage:"User logged out successfully"})
 })
 
 export default router
