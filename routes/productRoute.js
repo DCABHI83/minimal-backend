@@ -107,23 +107,23 @@ productRouter.get('/getallproducts',async(req,res)=>{
 try {
    const {name,category} = req.query
    
-   console.log(name,category)
-   
-   if(!category){
-      return res.status(400).json({message:"invalid category"})
-   }
-
+ 
+  
    const filter = {}
 
-   if(category) {
-      filter.categories = category
-   }
+  if (category) {
+  if (!mongoose.Types.ObjectId.isValid(category)) {
+    return res.status(400).json({ message: "Invalid category ID" });
+  }
+  filter.categories = category;
+}
+
 
    if(name){
       filter.name = {$regex:name,$options : "i"}
    }
 
-   const product = await Product.find(filter)
+   const product = await Product.find(filter).populate("categories")
 
    return res.status(200).json({message:"Product fetched successfully",product})
    
@@ -133,3 +133,70 @@ try {
 }
 
 })
+
+//getsingleProduct
+
+productRouter.get('/getsingleproduct/:id',async(req,res)=>{
+  try {
+   const {name,id} = req.params
+   console.log(id)
+     if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid product ID" });
+    }
+
+   const product = await Product.findById(id).populate("categories")
+   console.log(product)
+   if(!product){
+      return res.status(404).json({message:"product not found"})
+   }
+
+   return res.status(200).json({message:"product fetched successfully",product})
+
+  } catch (error) {
+   return res.status(500).json({message:"internal server error",error:error.message})
+  }
+   
+})
+
+
+//updatePtoduct
+
+productRouter.put("/updateproduct/:id",async(req,res)=>{
+  try {
+    const {id} = req.params
+
+    if(!mongoose.Types.ObjectId.isValid(id)){
+       return res.status(400).json({message:"invalid id"})
+    }
+ 
+    const {name,price,stock,description,categories} = req.body
+      
+    const product = await Product.findById(id)
+    if(!product){
+      return res.status(404).json({message:"product not found"})
+    }
+ 
+    if(name) product.name = name
+    if(price) product.price = price
+    if(stock) product.stock = stock
+    if(description) product.description = description
+     if(!Array.isArray(categories)){
+      return res.status(400).status({message:"categories must be an array"})
+   }
+
+
+ const validCategories = []
+ const invalidCategories = []
+
+ for(let id of categories){
+  if(!mongoose.Types.ObjectId.isValid(id)){
+   return res.status(400).json({message:"invalid id"})
+  }
+   }
+    
+    return res.status(200).json({message:"product updated successfully",product})
+  } catch (error) {
+   return res.status(500).json({message:"internal server error",error:error.message})
+  }
+})
+
