@@ -161,42 +161,74 @@ productRouter.get('/getsingleproduct/:id',async(req,res)=>{
 
 //updatePtoduct
 
-productRouter.put("/updateproduct/:id",async(req,res)=>{
+productRouter.put("/updateproduct/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate product ID
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid product ID" });
+    }
+
+    const { name, price, stock, description, categories } = req.body;
+
+    // Find product
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Validate categories (if provided)
+    if (categories) {
+      if (!Array.isArray(categories)) {
+        return res.status(400).json({ message: "Categories must be an array" });
+      }
+
+      const found = await Category.find({ _id: { $in: categories } });
+      if (found.length !== categories.length) {
+        return res.status(400).json({ message: "Some category IDs do not exist" });
+      }
+
+      product.categories = categories; // Assign valid categories
+    }
+
+    // Update only provided fields
+    if (name) product.name = name;
+    if (price) product.price = price;
+    if (stock) product.stock = stock;
+    if (description) product.description = description;
+
+    // Save updates
+    await product.save();
+
+    return res.status(200).json({
+      message: "Product updated successfully",
+      product
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      message: "Internal server error",
+      error: error.message
+    });
+  }
+});
+
+productRouter.delete('/deleteproduct/:id',async(req,res)=>{
   try {
     const {id} = req.params
-
     if(!mongoose.Types.ObjectId.isValid(id)){
        return res.status(400).json({message:"invalid id"})
     }
- 
-    const {name,price,stock,description,categories} = req.body
-      
     const product = await Product.findById(id)
     if(!product){
-      return res.status(404).json({message:"product not found"})
+       return res.status(404).json({message:"Product not found"})
     }
+   await Product.findByIdAndDelete(id)
  
-    if(name) product.name = name
-    if(price) product.price = price
-    if(stock) product.stock = stock
-    if(description) product.description = description
-     if(!Array.isArray(categories)){
-      return res.status(400).status({message:"categories must be an array"})
-   }
-
-
- const validCategories = []
- const invalidCategories = []
-
- for(let id of categories){
-  if(!mongoose.Types.ObjectId.isValid(id)){
-   return res.status(400).json({message:"invalid id"})
-  }
-   }
-    
-    return res.status(200).json({message:"product updated successfully",product})
+   return res.status(200).json({message:"product is deleted successfully"})
   } catch (error) {
    return res.status(500).json({message:"internal server error",error:error.message})
   }
-})
 
+})
