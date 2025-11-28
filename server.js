@@ -19,6 +19,10 @@ app.use((req,res,next)=>{
     next()
 })
 
+// app.use("/uploads", express.static("uploads"));
+
+
+
 app.use('/api',router,productRouter)
 
 const startServer = async()=>{
